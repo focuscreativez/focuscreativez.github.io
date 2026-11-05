@@ -51,3 +51,39 @@ document.getElementById('copy-brief').addEventListener('click', async () => {
     status.textContent = 'Your brief is selected. Copy it and paste it into your email.';
   }
 });
+
+const galleryFilters = document.querySelector('.gallery-filters');
+const galleryFigures = [...document.querySelectorAll('.still-item')];
+galleryFilters.hidden = false;
+galleryFilters.addEventListener('click', event => {
+  const button = event.target.closest('[data-filter]');
+  if (!button) return;
+  galleryFilters.querySelectorAll('button').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  galleryFigures.forEach(figure => { figure.hidden = button.dataset.filter !== 'All' && figure.dataset.category !== button.dataset.filter; });
+  const count = galleryFigures.filter(figure => !figure.hidden).length;
+  document.getElementById('gallery-count').textContent = count + (count === 1 ? ' photograph' : ' photographs');
+});
+const photoDialog = document.getElementById('photo-dialog');
+let photoIndex = 0;
+function showPhoto(index) {
+  photoIndex = index;
+  const figure = galleryFigures[index];
+  const image = figure.querySelector('img');
+  document.getElementById('photo-full').src = figure.querySelector('a').href;
+  document.getElementById('photo-full').alt = image.alt;
+  document.getElementById('photo-caption').textContent = figure.querySelector('h4').textContent + ' / ' + figure.dataset.category;
+}
+document.querySelectorAll('[data-photo]').forEach(link => link.addEventListener('click', event => {
+  event.preventDefault(); showPhoto(Number(link.dataset.photo)); openDialog(photoDialog);
+}));
+function stepPhoto(direction) {
+  const visible = galleryFigures.map((figure,index) => figure.hidden ? -1 : index).filter(index => index >= 0);
+  const position = visible.indexOf(photoIndex);
+  showPhoto(visible[(position + direction + visible.length) % visible.length]);
+}
+document.getElementById('photo-prev').addEventListener('click', () => stepPhoto(-1));
+document.getElementById('photo-next').addEventListener('click', () => stepPhoto(1));
+photoDialog.addEventListener('keydown', event => {
+  if (event.key === 'ArrowRight') { event.preventDefault(); stepPhoto(1); }
+  if (event.key === 'ArrowLeft') { event.preventDefault(); stepPhoto(-1); }
+});
